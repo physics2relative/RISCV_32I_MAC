@@ -1,0 +1,55 @@
+# -------------------------------------------------------------------
+# RISCV_32I_MAC_3 .gitignore
+# -------------------------------------------------------------------
+
+# Simulation tools & outputs
+*.vcd
+*.shm/
+*.fsdb
+.simvision/
+xcelium.d/
+INCA_libs/
+*.log
+*.history
+*.key
+*.vpd
+*~
+
+# Quartus / Vivado (If applicable)
+db/
+incremental_db/
+output_files/
+*.rpt
+*.summary
+
+# Editor / Temp files
+*.swp
+*.swo
+*.bak
+*.diag
+*.svcf
+
+# -------------------------------------------------------------------
+# Ignore ALL contents inside scripts, sim, and software directories
+# -------------------------------------------------------------------
+scripts/*
+sim/*
+software/*
+
+# -------------------------------------------------------------------
+# ONLY allow exactly .c, .hex, .dump deeply inside those directories
+# -------------------------------------------------------------------
+# No scripts (.py, .sh) allowed per user request
+
+!sim/**/*.c
+!sim/**/*.hex
+!sim/**/*.dump
+
+!software/**/*.c
+!software/**/*.hex
+!software/**/*.dump
+!software/**/*.h
+!software/**/*.s
+!software/**/Makefile
+!software/**/Makefrag
+!software/**/*.ld
