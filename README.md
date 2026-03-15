@@ -46,8 +46,8 @@ RV32I 기반 의 RISC-V 프로세서에 고성능 행렬 연산 가속을 위한
 ## 🛠️ 개발 환경 및 검증
 - **FPGA Board**: Terasic DE1-SoC (Cyclone V)
 - **Design Tools**: Intel Quartus Prime 18.1
-- **Simulation**: ModelSim / Xcelium
-- **Language**: Verilog HDL / SystemVerilog
+- **Simulation**: Xcelium
+- **Language**: Verilog HDL 
 
 ---
 
