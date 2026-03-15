@@ -21,16 +21,17 @@ module VGA_Subsystem (
 );
 
     // ====================================================
-    // 1. Clock Generation: 50MHz -> 25MHz via PLL
+    // 1. Clock Generation: 50MHz -> 25MHz via Clock Divider
     // ====================================================
-    wire vga_pixel_clk;
-    wire pll_locked;
-
-    pll_25mhz u_pll (
-        .inclk0 (clk),
-        .clk0   (vga_pixel_clk),
-        .locked (pll_locked)
-    );
+    reg vga_pixel_clk_reg;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            vga_pixel_clk_reg <= 1'b0;
+        else
+            vga_pixel_clk_reg <= ~vga_pixel_clk_reg;
+    end
+    
+    wire vga_pixel_clk = vga_pixel_clk_reg;
 
     // VGA_CLK driven to the external DAC.
     // It is INVERTED (~vga_pixel_clk) so that the DAC latches data on the falling edge 
