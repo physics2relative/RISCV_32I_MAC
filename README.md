@@ -1,18 +1,35 @@
 # RISCV_32I_MAC System Design
 
-RV32I 기반 의 RISC-V 프로세서에 고성능 행렬 연산 가속을 위한 **커스텀 MAC(Multiply-Accumulate) 유닛**과 **VGA Text Subsystem**을 통합한 SoC(System-on-Chip) 프로젝트입니다.
+RV32I 기반의 RISC-V 프로세서에 고성능 행렬 연산 가속을 위한 **커스텀 MAC(Multiply-Accumulate) 유닛**과 **VGA Text Subsystem**등 IO를 통합한 SoC(System-on-Chip) 프로젝트입니다.
 
-본 프로젝트는 단순한 코어 구현을 넘어, 하드웨어 가속기 설계 및 주변장치 인터페이스 통합 과정을 포함하는 전형적인 시스템 반도체 설계 흐름을 따릅니다.
+본 프로젝트는 단순한 코어 구현을 넘어, 하드웨어 가속기 설계 및 주변장치 인터페이스 통합 과정을 포함하는 전형적인 시스템 반도체 설계 흐름을 따른다.
 
 ---
 
 ## 🚀 4단계 설계 프로세스 (Design Flow)
 
 ### 1단계: RV32I Processor Core 설계
-프로젝트의 기반이 되는 RISC-V RV32I 입출력 세트를 처리하는 코어를 설계하였습니다.
+프로젝트의 기반이 되는 RISC-V RV32I 입출력 세트를 처리하는 코어를 설계했다.
 - **ISA**: RISC-V 32-bit Integer (RV32I)
 - **Architecture**: Modular Design (Control Path & Data Path 분리)
-- **주요 특징**: 확장성을 고려하여 ALU 외부에 커스텀 기능을 연동할 수 있는 인터페이스(Override Logic)를 구축하였습니다.
+
+RISC-V ISA 
+https://docs.riscv.org/reference/isa/unpriv/rv32.html
+
+RISC-V 32I ISA를 정리하면 다음과 같다. ECALL, EBREAK, FENCE를 제외한 나머지 37개의 명령어이다. 
+(ISA 정리 표)
+
+또한 구글에서 강의자료를 참고하여, 블록 다이어그램을 구성했다. 
+(블록 다이어그램 사진)
+Reference : https://lishixuan001.com/posts/40785/
+
+Reference에 나와있는 블록 다이어그램을 참고하여, 37개의 ISA를 모두 실행가능하도록 Control 신호를 추가하여 블록 다이어그램을 구성했다.
+
+또한 ISA별 Control 신호를 정리한 표는 다음과 같다. 
+(Control 신호 정리 표)
+
+#### Verilog 설계 과정
+구성한 블록 다이어그램을 기반으로 각 ISA 명령어의 Dataflow를 분석하고, 이에 필요한 Control Signal을 설계에 반영했다. 이를 통해 각 명령어가 실행될 때 거치는 하드웨어 경로와 제어 로직을 정밀하게 구현하였다. 
 
 ### 2단계: 커스텀 MAC (Multiply-Accumulate) 유닛 설계
 행렬 연산 및 신호 처리 가속을 위해 단일 클럭 내 연산을 수행하는 하드웨어 가속기를 설계하였습니다.
