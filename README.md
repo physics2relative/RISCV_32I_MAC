@@ -17,10 +17,12 @@ https://docs.riscv.org/reference/isa/unpriv/rv32.html
 
 
 RISC-V 32I ISA를 정리하면 다음과 같다. ECALL, EBREAK, FENCE를 제외한 나머지 37개의 명령어이다. 
+
 <img width="3616" height="1473" alt="rv32i_isa" src="https://github.com/user-attachments/assets/d2ff8a65-2200-40df-89d4-9af1af2c271d" />
 
 
 또한 구글에서 강의자료를 참고하여, 블록 다이어그램을 구성했다. 
+
 <img width="12500" height="7280" alt="RV32I drawio" src="https://github.com/user-attachments/assets/80b1ecd7-1246-429e-835d-e58470493ec0" />
 
 Reference : https://lishixuan001.com/posts/40785/
@@ -35,6 +37,7 @@ Single cycle 특성상 Data Memory, Immediate Memory, Register File은 Asynchron
 
 또한 IO, MAC 유닛 설계 시의 확장성을 고려하여 Data Memory와 Immediate Memory를 Core와 분리하고, Core를 DataPath와 Control로 분리해 주었다. 
 아래 그림은 이를 반영한 블록 다이어그램이다. 
+
 <img width="3210" height="2260" alt="RV32I_BASIC drawio" src="https://github.com/user-attachments/assets/a2a0c53d-42b9-4e2c-a735-280e76c74228" />
 
 
