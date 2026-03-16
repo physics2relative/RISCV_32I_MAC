@@ -15,10 +15,11 @@ RV32I 기반의 RISC-V 프로세서에 고성능 행렬 연산 가속을 위한 
 
 RISC-V ISA 
 https://docs.riscv.org/reference/isa/unpriv/rv32.html
+<img width="960" height="391" alt="rv32i_isa" src="https://github.com/user-attachments/assets/d61c38dd-7f48-42b7-97b8-02058f4d5dac" />
 
 RISC-V 32I ISA를 정리하면 다음과 같다. ECALL, EBREAK, FENCE를 제외한 나머지 37개의 명령어이다. 
 (ISA 정리 표)
-<img width="960" height="391" alt="rv32i_isa" src="https://github.com/user-attachments/assets/af259d62-dfdc-4b87-9b48-924a14dbd543" />
+
 
 또한 구글에서 강의자료를 참고하여, 블록 다이어그램을 구성했다. 
 (블록 다이어그램 사진)
