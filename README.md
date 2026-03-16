@@ -11,7 +11,6 @@ RV32I 기반의 RISC-V 프로세서에 고성능 행렬 연산 가속을 위한 
 ### 1단계: RV32I Processor Core 설계
 프로젝트의 기반이 되는 RISC-V RV32I 입출력 세트를 처리하는 코어를 설계했다.
 - **ISA**: RISC-V 32-bit Integer (RV32I)
-- **Architecture**: Modular Design (Control Path & Data Path 분리)
 
 RISC-V ISA 
 https://docs.riscv.org/reference/isa/unpriv/rv32.html
