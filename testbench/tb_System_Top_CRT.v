@@ -1509,8 +1509,8 @@ module tb_System_Top_CRT();
                 expected_val = (rd == 0) ? 32'b0 : (expected_mult_high + expected_mult_low + vC);
                 
                 // --- Wait for MAC FSM to finish ---
-                @(negedge clk); // Wait for state to change out of IDLE (T0)
-                while (uut.u_core.u_MAC.state != 2'b00) begin
+                @(negedge clk); // Wait for state to change out of IDLE (S_DETECTION)
+                while (uut.u_core.u_MAC.state != 1'b0) begin
                     @(negedge clk);
                 end
                 

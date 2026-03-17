@@ -30,7 +30,7 @@ module RV32I_Core(
     wire BrEq, BrLT;
     
     wire [31:0] DataA, DataB;
-    wire override_en, pc_en, wb_sel_mac, addr_sel_mac, reg_wen_mac;
+    wire mac_on, pc_en, wb_sel_mac, addr_sel_mac, reg_wen_mac;
     wire [31:0] mac_WB;
     wire [4:0] mac_rd;
 
@@ -56,7 +56,7 @@ module RV32I_Core(
         .dmem_addr(dmem_addr),
         .dmem_data_w(dmem_data_w),
         .dmem_data_r(dmem_data_r),
-        .override_en(override_en),
+        .override_en(mac_on),
         .pc_en(pc_en),
         .wb_sel_mac(wb_sel_mac),
         .addr_sel_mac(addr_sel_mac),
@@ -86,19 +86,18 @@ module RV32I_Core(
         .LoadEx(LoadEx)
     );
 
-    // MAC Unit 
-    MAC_top u_MAC(
+    MAC2_top u_MAC(
         .clk(clk),
         .rst(rst),
         .DataA(DataA),
         .DataB(DataB),
         .inst(inst),
-        .override_en(override_en),
+        .mac_on(mac_on),
         .pc_en(pc_en),
         .wb_sel_mac(wb_sel_mac),
         .addr_sel_mac(addr_sel_mac),
-        .mac_WB(mac_WB),
         .reg_wen_mac(reg_wen_mac),
+        .mac_WB(mac_WB),
         .mac_rd(mac_rd)
     );
 

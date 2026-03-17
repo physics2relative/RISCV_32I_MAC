@@ -148,12 +148,6 @@ assign mac_rd    = latched_inst[11:7];
             end
             s_FETCH_RD: read_rd <= DataA; 
             s_CALC_WB : begin 
-`ifdef SIMULATION
-                $display("[MAC Debug] inst=%h | rs1(mul_a)=%h, rs2(mul_b)=%h, rd(old)=%h", latched_inst, mul_a, mul_b, read_rd);
-                $display("[MAC Debug]   high_a=%d * high_b=%d = %d", $signed(mul_a_high), $signed(mul_b_high), $signed(mult_high));
-                $display("[MAC Debug]   low_a=%d * low_b=%d = %d", $signed(mul_a_low), $signed(mul_b_low), $signed(mult_low));
-                $display("[MAC Debug]   mac_WB(new_rd) = %d", $signed(mac_WB));
-`endif
             end 
             default   : begin end    
         endcase           
