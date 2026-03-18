@@ -9,7 +9,13 @@ module MMIO_Interconnect(
     input        core_LoadEx,    // Signed/Unsigned Load
     output [31:0] core_rdata,
 
-    // Interface to DMEM (Memory memory map starts at 0x0000_0000)
+    // Chip Select Outputs
+    output cs_dmem,
+    output cs_gpio,
+    output cs_vmem,
+    output cs_timer,
+
+    // Interface to DMEM
     output [31:0] dmem_addr,
     output [31:0] dmem_wdata,
     output [2:0]  dmem_MemRW,
@@ -17,51 +23,73 @@ module MMIO_Interconnect(
     output        dmem_LoadEx,
     input  [31:0] dmem_rdata,
 
-    // Interface to Peripheral 1 (Example GPIO memory map starts at 0x4000_0000)
-    // output [31:0] gpio_addr,
-    // output [31:0] gpio_wdata,
-    // output [2:0]  gpio_MemRW,
-    // input  [31:0] gpio_rdata
+    // Interface to GPIO
+    output [31:0] gpio_addr,
+    output [31:0] gpio_wdata,
+    output [2:0]  gpio_MemRW,
+    input  [31:0] gpio_rdata,
 
-    // Interface to VMEM (VGA Text Buffer starts at 0x4000_0000)
-    output        vmem_we,
     output [11:0] vmem_addr,
-    output [7:0]  vmem_wdata
+    output [7:0]  vmem_wdata,
+    output [2:0]  vmem_MemRW,
+
+    // Interface to Timer
+    output [31:0] timer_addr,
+    output [31:0] timer_wdata,
+    output [2:0]  timer_MemRW,
+    input  [31:0] timer_rdata
     );
 
-    // Example Memory Map Definitions
-    // 0x0000_0000 ~ 0x0000_FFFF: Data Memory (64KB max)
-    // 0x4000_0000 ~ 0x4000_0FFF: User Peripherals (GPIO, UART, etc.)
-    
-    // Address decoder rules
-    wire cs_dmem = (core_addr < 32'h2000_0000);
-    // wire cs_gpio = (core_addr >= 32'h4000_0000 && core_addr < 32'h4000_1000);
-    wire cs_vmem = (core_addr >= 32'h4000_0000 && core_addr < 32'h4000_1000); // 4KB Range
+    // =========================================================
+    // Memory Map
+    // 0x0000_0000 ~ 0x1FFF_FFFF : Data Memory
+    // 0x1000_0000 ~ 0x1000_00FF : GPIO (KEY, SW, LED, HEX)
+    // 0x4000_0000 ~ 0x4000_0FFF : VMEM (VGA Text Buffer, 4KB)
+    // =========================================================
 
-    // Output assignment to DMEM
+    // Address Decoder - Chip Select Generation
+    assign cs_dmem  = (core_addr < 32'h1000_0000);
+    assign cs_gpio  = (core_addr >= 32'h1000_0000 && core_addr < 32'h1000_0100);
+    assign cs_timer = (core_addr >= 32'h2000_0000 && core_addr < 32'h2000_0100);
+    assign cs_vmem  = (core_addr >= 32'h4000_0000 && core_addr < 32'h4000_1000);
+
+    // =========================================================
+    // DMEM Interface: Pass-through with CS gating
+    // =========================================================
     assign dmem_addr   = core_addr;
     assign dmem_wdata  = core_wdata;
     assign dmem_WdLen  = core_WdLen;
     assign dmem_LoadEx = core_LoadEx;
-    
-    // Pass write/read enable signal only when chip select is true.
-    // MemRW behavior from DMEM: 0,1,2=Write, 3=Read Mode. 4=Idle
-    assign dmem_MemRW  = cs_dmem ? core_MemRW : 3'd4; // 3'd4 is idle_mode in DMEM.v
+    assign dmem_MemRW  = core_MemRW;
 
-    // Output assignment to GPIO Peripheral (Commented out for future use)
-    // assign gpio_addr   = core_addr;
-    // assign gpio_wdata  = core_wdata;
-    // assign gpio_MemRW  = cs_gpio ? core_MemRW : 3'd4;
+    // =========================================================
+    // GPIO Interface: Pass-through
+    // =========================================================
+    assign gpio_addr   = core_addr;
+    assign gpio_wdata  = core_wdata;
+    assign gpio_MemRW  = core_MemRW;
 
-    // Output assignment to VMEM (Width Adapter)
-    // core_MemRW: 0=SB/SW, 1=SH, 2=SW -> Any write operation triggers vmem_we
-    assign vmem_we    = cs_vmem & (core_MemRW == 3'd0 || core_MemRW == 3'd1 || core_MemRW == 3'd2);
-    assign vmem_addr  = core_addr[11:0]; // Extract bottom 12 bits for 4KB dual-port RAM
-    assign vmem_wdata = core_wdata[7:0]; // Extract bottom 8 bits for ASCII char code
+    // =========================================================
+    // VMEM Interface: Width Adapter (32-bit -> 12-bit addr, 8-bit data)
+    // =========================================================
+    assign vmem_addr   = core_addr[11:0];
+    assign vmem_wdata  = core_wdata[7:0];
+    assign vmem_MemRW  = core_MemRW;
 
-    // Multiplexer for Core Read Data
-    assign core_rdata = cs_dmem ? dmem_rdata  : 
-                        // cs_gpio ? gpio_rdata  : 
-                        32'b0; // VMEM is Write-Only from the CPU's perspective
+    // =========================================================
+    // Timer Interface: Pass-through
+    // =========================================================
+    assign timer_addr  = core_addr;
+    assign timer_wdata = core_wdata;
+    assign timer_MemRW = core_MemRW;
+
+    // =========================================================
+    // Read Data Multiplexer
+    // =========================================================
+    assign core_rdata = cs_dmem  ? dmem_rdata  :
+                        cs_gpio  ? gpio_rdata  :
+                        cs_timer ? timer_rdata :
+                        // cs_vmem is write-only from CPU perspective
+                        32'b0;
 
 endmodule

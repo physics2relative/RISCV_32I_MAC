@@ -4,9 +4,20 @@ module System_Top(
     input clk,
     input rst,
 
-    // MAC interface exposed to the top (kept for compatibility with original top)
+    // MAC interface exposed to the top
     output [31:0] core_result,
     output pc_stall,
+
+    // DE1-SoC GPIO Physical Pins
+    input  [3:0]  KEY,
+    input  [9:0]  SW,
+    output [9:0]  LEDR,
+    output [6:0]  HEX0,
+    output [6:0]  HEX1,
+    output [6:0]  HEX2,
+    output [6:0]  HEX3,
+    output [6:0]  HEX4,
+    output [6:0]  HEX5,
 
     // VGA Physical Pins
     output [7:0]  VGA_R,       
@@ -46,11 +57,35 @@ module System_Top(
     wire        dmem_LoadEx;
 
     // ==========================================
+    // Interconnect <--> GPIO Signals
+    // ==========================================
+    wire [31:0] gpio_addr;
+    wire [31:0] gpio_wdata;
+    wire [31:0] gpio_rdata;
+    wire [2:0]  gpio_MemRW;
+
+    // ==========================================
     // Interconnect <--> VMEM Signals (VGA)
     // ==========================================
-    wire        vmem_we;
     wire [11:0] vmem_addr;
     wire [7:0]  vmem_wdata;
+    wire [2:0]  vmem_MemRW;
+
+    // ==========================================
+    // Interconnect <--> Timer Signals
+    // ==========================================
+    wire [31:0] timer_addr;
+    wire [31:0] timer_wdata;
+    wire [31:0] timer_rdata;
+    wire [2:0]  timer_MemRW;
+
+    // ==========================================
+    // Chip Select Signals from Interconnect
+    // ==========================================
+    wire cs_dmem;
+    wire cs_gpio;
+    wire cs_vmem;
+    wire cs_timer;
 
     // ==========================================
     // 1. Processor Core Integration
@@ -96,6 +131,11 @@ module System_Top(
         .core_LoadEx(core_LoadEx),
         .core_rdata(core_dmem_rdata),
 
+        // Chip Select Outputs
+        .cs_dmem(cs_dmem),
+        .cs_gpio(cs_gpio),
+        .cs_vmem(cs_vmem),
+
         // To Data Memory
         .dmem_addr(dmem_addr),
         .dmem_wdata(dmem_wdata),
@@ -104,34 +144,75 @@ module System_Top(
         .dmem_LoadEx(dmem_LoadEx),
         .dmem_rdata(dmem_rdata),
 
+        // To GPIO
+        .gpio_addr(gpio_addr),
+        .gpio_wdata(gpio_wdata),
+        .gpio_MemRW(gpio_MemRW),
+        .gpio_rdata(gpio_rdata),
+
         // To VMEM (VGA Text Buffer)
-        .vmem_we(vmem_we),
         .vmem_addr(vmem_addr),
-        .vmem_wdata(vmem_wdata)
+        .vmem_wdata(vmem_wdata),
+        .vmem_MemRW(vmem_MemRW),
+
+        // To Timer
+        .cs_timer(cs_timer),
+        .timer_addr(timer_addr),
+        .timer_wdata(timer_wdata),
+        .timer_MemRW(timer_MemRW),
+        .timer_rdata(timer_rdata)
     );
 
     // ==========================================
     // 4. Memory Base (DMEM)
     // ==========================================
     DMEM u_dmem (
+        .clk(clk),
+        .cs(cs_dmem),
         .Addr(dmem_addr),
         .DataW(dmem_wdata),
         .WdLen(dmem_WdLen),
         .MemRW(dmem_MemRW),
         .LoadEx(dmem_LoadEx),
-        .clk(clk),
         .DataO(dmem_rdata)
     );
 
     // ==========================================
-    // 5. VGA Subsystem (MMIO Peripheral)
+    // 5. GPIO Peripheral
+    // ==========================================
+    GPIO u_gpio (
+        .clk(clk),
+        .rst(rst),
+
+        // MMIO Interface
+        .cs(cs_gpio),
+        .MemRW(gpio_MemRW),
+        .addr(gpio_addr),
+        .wdata(gpio_wdata),
+        .rdata(gpio_rdata),
+
+        // DE1-SoC Physical Pins
+        .KEY(KEY),
+        .SW(SW),
+        .LEDR(LEDR),
+        .HEX0(HEX0),
+        .HEX1(HEX1),
+        .HEX2(HEX2),
+        .HEX3(HEX3),
+        .HEX4(HEX4),
+        .HEX5(HEX5)
+    );
+
+    // ==========================================
+    // 6. VGA Subsystem (MMIO Peripheral)
     // ==========================================
     VGA_Subsystem u_vga (
         .clk(clk),
-        .rst_n(~rst), // rst is Active High in System_Top, VGA_Subsystem uses Active Low rst_n
+        .rst_n(~rst),
         
         // MMIO CPU Interface
-        .vmem_we(vmem_we),
+        .cs(cs_vmem),
+        .MemRW(vmem_MemRW),
         .vmem_addr(vmem_addr),
         .vmem_wdata(vmem_wdata),
         
@@ -144,6 +225,21 @@ module System_Top(
         .VGA_CLK(VGA_CLK),
         .VGA_BLANK_N(VGA_BLANK_N),
         .VGA_SYNC_N(VGA_SYNC_N)
+    );
+
+    // ==========================================
+    // 7. Timer Peripheral
+    // ==========================================
+    Timer u_timer (
+        .clk(clk),
+        .rst(rst),
+
+        // MMIO Interface
+        .cs(cs_timer),
+        .MemRW(timer_MemRW),
+        .addr(timer_addr),
+        .wdata(timer_wdata),
+        .rdata(timer_rdata)
     );
 
 endmodule

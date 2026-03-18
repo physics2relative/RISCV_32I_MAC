@@ -5,7 +5,8 @@ module VGA_Subsystem (
     input         rst_n,       // Active Low Reset
     
     // MMIO Interface (VMEM CPU Port)
-    input         vmem_we,
+    input         cs,          // Chip Select from Interconnect
+    input  [2:0]  MemRW,       // Memory operation from Core
     input  [11:0] vmem_addr,
     input  [7:0]  vmem_wdata,
     
@@ -19,6 +20,11 @@ module VGA_Subsystem (
     output        VGA_BLANK_N,  
     output        VGA_SYNC_N   
 );
+
+    // Generate write enable from CS and MemRW
+    // MemRW: 0=SB, 1=SH, 2=SW -> Any store triggers write
+    wire vmem_we = cs & (MemRW == 3'd0 || MemRW == 3'd1 || MemRW == 3'd2);
+
 
     // ====================================================
     // 1. Clock Generation: 50MHz -> 25MHz via Clock Divider
