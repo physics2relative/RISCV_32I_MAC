@@ -37,7 +37,14 @@ module MMIO_Interconnect(
     output [31:0] timer_addr,
     output [31:0] timer_wdata,
     output [2:0]  timer_MemRW,
-    input  [31:0] timer_rdata
+    input  [31:0] timer_rdata,
+
+    // Interface to UART
+    output        cs_uart,
+    output [31:0] uart_addr,
+    output [31:0] uart_wdata,
+    output [2:0]  uart_MemRW,
+    input  [31:0] uart_rdata
     );
 
     // =========================================================
@@ -51,6 +58,7 @@ module MMIO_Interconnect(
     assign cs_dmem  = (core_addr < 32'h1000_0000);
     assign cs_gpio  = (core_addr >= 32'h1000_0000 && core_addr < 32'h1000_0100);
     assign cs_timer = (core_addr >= 32'h2000_0000 && core_addr < 32'h2000_0100);
+    assign cs_uart  = (core_addr >= 32'h3000_0000 && core_addr < 32'h3000_0100);
     assign cs_vmem  = (core_addr >= 32'h4000_0000 && core_addr < 32'h4000_1000);
 
     // =========================================================
@@ -84,11 +92,19 @@ module MMIO_Interconnect(
     assign timer_MemRW = core_MemRW;
 
     // =========================================================
+    // UART Interface: Pass-through
+    // =========================================================
+    assign uart_addr   = core_addr;
+    assign uart_wdata  = core_wdata;
+    assign uart_MemRW  = core_MemRW;
+
+    // =========================================================
     // Read Data Multiplexer
     // =========================================================
     assign core_rdata = cs_dmem  ? dmem_rdata  :
                         cs_gpio  ? gpio_rdata  :
                         cs_timer ? timer_rdata :
+                        cs_uart  ? uart_rdata  :
                         // cs_vmem is write-only from CPU perspective
                         32'b0;
 

@@ -1,6 +1,8 @@
 `timescale 1ns/1ps
 
-module System_Top(
+module System_Top #(
+    parameter FIRMWARE_FILE = "Z:/user/choi.jw/PROJECT/RISCV/RISCV_32I_MAC/software/C_code/files/add/add.hex"
+)(
     input clk,
     input rst,
 
@@ -27,7 +29,11 @@ module System_Top(
     output        VGA_VS,      
     output        VGA_CLK,     
     output        VGA_BLANK_N,  
-    output        VGA_SYNC_N   
+    output        VGA_SYNC_N,
+
+    // UART Physical Pins
+    input         UART_RXD,
+    output        UART_TXD
     );
 
     // ==========================================
@@ -80,6 +86,15 @@ module System_Top(
     wire [2:0]  timer_MemRW;
 
     // ==========================================
+    // Interconnect <--> UART Signals
+    // ==========================================
+    wire [31:0] uart_addr;
+    wire [31:0] uart_wdata;
+    wire [31:0] uart_rdata;
+    wire [2:0]  uart_MemRW;
+    wire        cs_uart;
+
+    // ==========================================
     // Chip Select Signals from Interconnect
     // ==========================================
     wire cs_dmem;
@@ -114,7 +129,9 @@ module System_Top(
     // ==========================================
     // 2. Memory Logic (IMEM)
     // ==========================================
-    IMEM u_imem (
+    IMEM #(
+        .FIRMWARE_FILE(FIRMWARE_FILE)
+    ) u_imem (
         .addr(imem_addr),
         .data_o(inst)
     );
@@ -160,7 +177,14 @@ module System_Top(
         .timer_addr(timer_addr),
         .timer_wdata(timer_wdata),
         .timer_MemRW(timer_MemRW),
-        .timer_rdata(timer_rdata)
+        .timer_rdata(timer_rdata),
+
+        // To UART
+        .cs_uart(cs_uart),
+        .uart_addr(uart_addr),
+        .uart_wdata(uart_wdata),
+        .uart_MemRW(uart_MemRW),
+        .uart_rdata(uart_rdata)
     );
 
     // ==========================================
@@ -240,6 +264,25 @@ module System_Top(
         .addr(timer_addr),
         .wdata(timer_wdata),
         .rdata(timer_rdata)
+    );
+
+    // ==========================================
+    // 8. UART Peripheral (MMIO Wrapper)
+    // ==========================================
+    UART_MMIO u_uart (
+        .clk(clk),
+        .rst(rst),
+
+        // MMIO Interface
+        .cs(cs_uart),
+        .MemRW(uart_MemRW),
+        .addr(uart_addr),
+        .wdata(uart_wdata),
+        .rdata(uart_rdata),
+
+        // Physical Interface
+        .rx_serial(UART_RXD),
+        .tx_serial(UART_TXD)
     );
 
 endmodule

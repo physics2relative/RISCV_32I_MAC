@@ -19,7 +19,7 @@ module Timer (
     input  [2:0]  MemRW,       // Memory operation
     input  [31:0] addr,        // Full address (offset extracted internally)
     input  [31:0] wdata,       // Write data from Core
-    output reg [31:0] rdata,   // Read data to Core
+    output reg [31:0] rdata    // Read data to Core
 
 );
 
@@ -41,32 +41,28 @@ module Timer (
     reg        timer_en;
 
     // =========================================================
-    // Counter Logic
+    // Internal State and Counter Logic
     // =========================================================
     always @(posedge clk) begin
         if (rst) begin
-            cycle_count <= 32'd0;
-        end else if (timer_en) begin
-            cycle_count <= cycle_count + 32'd1;
-        end
-    end
-
-    // =========================================================
-    // Register Write Logic
-    // =========================================================
-    always @(posedge clk) begin
-        if (rst) begin
-            timer_en <= 1'b0;
+            timer_en     <= 1'b0;
             snapshot_reg <= 32'd0;
-        end else if (wen) begin
-            case (offset)
-                8'h04: begin
-                    timer_en <= wdata[0];             // Bit 0: Enable/Stop
-                    if (wdata[1]) cycle_count <= 32'd0; // Bit 1: Reset (Synchronous)
-                    if (wdata[2]) snapshot_reg <= cycle_count; // Bit 2: Snapshot
+            cycle_count  <= 32'd0;
+        end else begin
+            // 1. Process Memory Writes
+            if (wen) begin
+                if (offset == 8'h04) begin
+                    timer_en <= wdata[0];
+                    if (wdata[2]) snapshot_reg <= cycle_count;
                 end
-                // 0x00, 0x08 are Read-Only
-            endcase
+            end
+
+            // 2. Process Counter Updates (Override if software resets it)
+            if (wen && offset == 8'h04 && wdata[1]) begin
+                cycle_count <= 32'd0;
+            end else if (timer_en) begin
+                cycle_count <= cycle_count + 32'd1;
+            end
         end
     end
 

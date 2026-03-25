@@ -23,7 +23,7 @@ module DMEM(
     localparam read_mode  = 3'd3;
     localparam idle_mode  = 3'd4;
     
-    // localparam for address width
+    // localparam for address width (8 bits = 256B)
     localparam dm_aw = 8;
 
     reg [7:0] dmem [0:(1 << dm_aw)-1]; // [data] register [addr]
@@ -38,11 +38,13 @@ module DMEM(
     // CS-gated read output
     assign DataO = (cs && MemRW == read_mode) ? DataR : 32'd0;
 
-    // Initialize
+    // Initialize (simulation only)
+    `ifdef SIMULATION
     integer i;
     initial begin
         for (i=0; i < (1 << (dm_aw)); i=i+1) dmem[i] = 8'b0;
     end
+    `endif
 
     // Writing (store) - gated by CS
     always @ (posedge clk) begin
